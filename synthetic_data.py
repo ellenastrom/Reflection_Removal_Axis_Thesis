@@ -10,7 +10,6 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
 
-
 def syn_data(t,r,sigma):
     t=np.power(t,2.2)
     r=np.power(r,2.2)
@@ -102,10 +101,12 @@ for id, t_layer in enumerate(syn_image1_list):
     output_image_t,output_image_r,input_image=syn_data(output_image_t,output_image_r,sigma)
 
     file=os.path.splitext(os.path.basename(syn_image1_list[id]))[0]
+    im = Image.fromarray((syn_image2).astype(np.uint8))
+    im.save("images/synthetic_dataset/generated/reflection_org/r_org" + file + ".jpeg")
     im = Image.fromarray((input_image * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/blended/" + file + ".jpeg")
+    im.save("images/synthetic_dataset/generated/blended/b_" + file + ".jpeg")
     im = Image.fromarray((output_image_r * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/reflection/" + file + ".jpeg")
+    im.save("images/synthetic_dataset/generated/reflection/r_" + file + ".jpeg")
     im = Image.fromarray((output_image_t * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/transmission/" + file + ".jpeg")
+    im.save("images/synthetic_dataset/generated/transmission/t_" + file + ".jpeg")
 
