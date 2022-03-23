@@ -66,12 +66,15 @@ def prepare_data(train_path):
                     image2.append(path_output)
     return input_names,image1,image2
 
-def gkern(kernlen=100, nsig=1):
+def gkern(width=100, height=100, nsig=1):
     """Returns a 2D Gaussian kernel array."""
-    interval = (2*nsig+1.)/(kernlen)
-    x = np.linspace(-nsig-interval/2., nsig+interval/2., kernlen+1)
-    kern1d = np.diff(st.norm.cdf(x))
-    kernel_raw = np.sqrt(np.outer(kern1d, kern1d))
+    interval = (2*nsig+1.)/(width)
+    x = np.linspace(-nsig-interval/2., nsig+interval/2., width+1)
+    kern1d_width = np.diff(st.norm.cdf(x))
+    interval = (2*nsig+1.)/(height)
+    x = np.linspace(-nsig-interval/2., nsig+interval/2., height+1)
+    kern1d_height = np.diff(st.norm.cdf(x))
+    kernel_raw = np.sqrt(np.outer(kern1d_height, kern1d_width))
     kernel = kernel_raw/kernel_raw.sum()
     kernel = kernel/kernel.max()
     return kernel
@@ -79,10 +82,6 @@ def gkern(kernlen=100, nsig=1):
 train_syn_root = ['images/synthetic_dataset/']
 names,syn_image1_list,syn_image2_list=prepare_data(train_syn_root) # image pairs for generating synthetic training images
 
-# create a vignetting mask
-g_mask=gkern(1920,3)
-g_mask=g_mask[:1080, :]
-g_mask=np.dstack((g_mask,g_mask,g_mask))
 k_sz=np.linspace(1,5,80) # for synthetic images
 
 for id, t_layer in enumerate(syn_image1_list):
@@ -93,7 +92,11 @@ for id, t_layer in enumerate(syn_image1_list):
     syn_image1 = cv2.cvtColor(syn_image1, cv2.COLOR_BGR2RGB)
     syn_image2 = cv2.cvtColor(syn_image2, cv2.COLOR_BGR2RGB)
     w=1920
-    h = 1080
+    h=1080
+
+    # create a vignetting mask
+    g_mask=gkern(w,h,np.random.randint(1, 4))#3)
+    g_mask=np.dstack((g_mask,g_mask,g_mask))
 
     output_image_t=cv2.resize(np.float32(syn_image1),(w,h),cv2.INTER_CUBIC)/255.0
     output_image_r=cv2.resize(np.float32(syn_image2),(w,h),cv2.INTER_CUBIC)/255.0
