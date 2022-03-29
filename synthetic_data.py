@@ -88,6 +88,9 @@ for id, t_layer in enumerate(syn_image1_list):
     r_id = np.random.randint(0, len(syn_image2_list))
 
     syn_image1=cv2.imread(syn_image1_list[id],-1)
+    #w, h = syn_image1.shape[:2]
+    if 1080 != syn_image1.shape[0] and 1920 != syn_image1.shape[1]:
+        continue
     syn_image2=cv2.imread(syn_image2_list[r_id],-1)
     syn_image1 = cv2.cvtColor(syn_image1, cv2.COLOR_BGR2RGB)
     syn_image2 = cv2.cvtColor(syn_image2, cv2.COLOR_BGR2RGB)
@@ -103,13 +106,33 @@ for id, t_layer in enumerate(syn_image1_list):
     sigma=k_sz[np.random.randint(0, len(k_sz))]
     output_image_t,output_image_r,input_image=syn_data(output_image_t,output_image_r,sigma)
 
-    file=os.path.splitext(os.path.basename(syn_image1_list[id]))[0]
-    im = Image.fromarray((syn_image2).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/reflection_org/r_org" + file + ".jpeg")
-    im = Image.fromarray((input_image * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/blended/b_" + file + ".jpeg")
-    im = Image.fromarray((output_image_r * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/reflection/r_" + file + ".jpeg")
-    im = Image.fromarray((output_image_t * 255).astype(np.uint8))
-    im.save("images/synthetic_dataset/generated/transmission/t_" + file + ".jpeg")
+    directories = ["images/synthetic_dataset/generated/reflection_org/", "images/synthetic_dataset/generated/blended/",
+    "images/synthetic_dataset/generated/reflection/", "images/synthetic_dataset/generated/transmission/"]
 
+    directories_test = ["images/synthetic_dataset/generated/reflection_org/test/", "images/synthetic_dataset/generated/blended/test/",
+    "images/synthetic_dataset/generated/reflection/test/", "images/synthetic_dataset/generated/transmission/test/"]
+
+    for directory in directories:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    for directory in directories_test:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+    im_0 = Image.fromarray((syn_image2).astype(np.uint8))
+    im_1  = Image.fromarray((input_image * 255).astype(np.uint8))
+    im_2 = Image.fromarray((output_image_r * 255).astype(np.uint8))
+    im_3 = Image.fromarray((output_image_t * 255).astype(np.uint8))
+
+    file=os.path.splitext(os.path.basename(syn_image1_list[id]))[0]
+
+    if id%100 == 0:
+        im_0.save(directories_test[0] + file + ".jpeg")
+        im_1.save(directories_test[1] + file + ".jpeg")
+        im_2.save(directories_test[2] + file + ".jpeg")
+        im_3.save(directories_test[3] + file + ".jpeg")
+    else:
+        im_0.save(directories[0] + file + ".jpeg")
+        im_1.save(directories[1] + file + ".jpeg")
+        im_2.save(directories[2] + file + ".jpeg")
+        im_3.save(directories[3] + file + ".jpeg")
