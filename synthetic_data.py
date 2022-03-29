@@ -46,25 +46,21 @@ def is_image_file(filename):
 
 def prepare_data(train_path):
     input_names=[]
-    image1=[]
-    image2=[]
-    for dirname in train_path:
-        train_t_gt = dirname + "transmission_layer/"
-        train_r_gt = dirname + "reflection_layer/"
-        train_b = dirname + "blended/"
-        for root, _, fnames in sorted(os.walk(train_t_gt)):
-            for fname in fnames:
-                if is_image_file(fname):
-                    path_input = os.path.join(train_b, fname)
-                    path_output = os.path.join(train_t_gt, fname)
-                    input_names.append(path_input)
-                    image1.append(path_output)
-        for root, _, fnames in sorted(os.walk(train_r_gt)):
-            for fname in fnames:
-                if is_image_file(fname):
-                    path_output = os.path.join(train_r_gt, fname)
-                    image2.append(path_output)
-    return input_names,image1,image2
+    transmission_images=[]
+    reflection_images=[]
+    train_t_gt = train_path + "transmission_layer/"
+    train_r_gt = train_path + "reflection_layer/"
+    for root, _, fnames in sorted(os.walk(train_t_gt)):
+        for fname in fnames:
+            if is_image_file(fname):
+                path_output = os.path.join(train_t_gt, fname)
+                transmission_images.append(path_output)
+    for root, _, fnames in sorted(os.walk(train_r_gt)):
+        for fname in fnames:
+            if is_image_file(fname):
+                path_output = os.path.join(train_r_gt, fname)
+                reflection_images.append(path_output)
+    return transmission_images, reflection_images
 
 def gkern(width=100, height=100, nsig=1):
     """Returns a 2D Gaussian kernel array."""
@@ -79,47 +75,46 @@ def gkern(width=100, height=100, nsig=1):
     kernel = kernel/kernel.max()
     return kernel
 
-train_syn_root = ['images/synthetic_dataset/']
-names,syn_image1_list,syn_image2_list=prepare_data(train_syn_root) # image pairs for generating synthetic training images
+train_syn_root = 'images/synthetic_dataset/'
+trainsmission_list,reflection_list=prepare_data(train_syn_root) # image pairs for generating synthetic training images
+
+directories = ["images/synthetic_dataset/generated/reflection_org/", "images/synthetic_dataset/generated/blended/",
+    "images/synthetic_dataset/generated/reflection/", "images/synthetic_dataset/generated/transmission/"]
+
+directories_test = ["images/synthetic_dataset/generated/reflection_org/test/", "images/synthetic_dataset/generated/blended/test/",
+    "images/synthetic_dataset/generated/reflection/test/", "images/synthetic_dataset/generated/transmission/test/"]
+
+for directory in directories:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+for directory in directories_test:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 k_sz=np.linspace(1,5,80) # for synthetic images
+w=1920
+h=1080
 
-for id, t_layer in enumerate(syn_image1_list):
+for id, transmission_name in enumerate(transmission_list):
     r_id = np.random.randint(0, len(syn_image2_list))
 
-    syn_image1=cv2.imread(syn_image1_list[id],-1)
-    #w, h = syn_image1.shape[:2]
-    if 1080 != syn_image1.shape[0] and 1920 != syn_image1.shape[1]:
+    t_image=cv2.imread(transmission_name, -1) #syn_image1_list[id],-1)
+    if t_image.shape[0] != h and t_image.shape[1] != w:
         continue
-    syn_image2=cv2.imread(syn_image2_list[r_id],-1)
-    syn_image1 = cv2.cvtColor(syn_image1, cv2.COLOR_BGR2RGB)
-    syn_image2 = cv2.cvtColor(syn_image2, cv2.COLOR_BGR2RGB)
-    w=1920
-    h=1080
+    r_image = cv2.imread(reflection_list[r_id],-1)
+    t_image = cv2.cvtColor(t_image, cv2.COLOR_BGR2RGB)
+    r_image = cv2.cvtColor(r_image, cv2.COLOR_BGR2RGB)
 
     # create a vignetting mask
     g_mask=gkern(w,h,np.random.randint(1, 4))#3)
     g_mask=np.dstack((g_mask,g_mask,g_mask))
 
-    output_image_t=cv2.resize(np.float32(syn_image1),(w,h),cv2.INTER_CUBIC)/255.0
-    output_image_r=cv2.resize(np.float32(syn_image2),(w,h),cv2.INTER_CUBIC)/255.0
+    output_image_t=cv2.resize(np.float32(t_image),(w,h),cv2.INTER_CUBIC)/255.0
+    output_image_r=cv2.resize(np.float32(r_image),(w,h),cv2.INTER_CUBIC)/255.0
     sigma=k_sz[np.random.randint(0, len(k_sz))]
     output_image_t,output_image_r,input_image=syn_data(output_image_t,output_image_r,sigma)
 
-    directories = ["images/synthetic_dataset/generated/reflection_org/", "images/synthetic_dataset/generated/blended/",
-    "images/synthetic_dataset/generated/reflection/", "images/synthetic_dataset/generated/transmission/"]
-
-    directories_test = ["images/synthetic_dataset/generated/reflection_org/test/", "images/synthetic_dataset/generated/blended/test/",
-    "images/synthetic_dataset/generated/reflection/test/", "images/synthetic_dataset/generated/transmission/test/"]
-
-    for directory in directories:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-    for directory in directories_test:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-    im_0 = Image.fromarray((syn_image2).astype(np.uint8))
+    im_0 = Image.fromarray((r_image).astype(np.uint8))
     im_1  = Image.fromarray((input_image * 255).astype(np.uint8))
     im_2 = Image.fromarray((output_image_r * 255).astype(np.uint8))
     im_3 = Image.fromarray((output_image_t * 255).astype(np.uint8))
