@@ -18,7 +18,8 @@ def syn_data(t,r,sigma):
     r_blur=cv2.GaussianBlur(r,(sz,sz),sigma,sigma,0)
     blend=r_blur+t
     
-    att=1.08+np.random.random()/10.0
+    att=0.5+np.random.random()/1.5 #1.08+np.random.random()/10.0
+    print('att: ', att)
     
     for i in range(3):
         maski=blend[:,:,i]>1
@@ -75,19 +76,19 @@ def gkern(width=100, height=100, nsig=1):
     kernel = kernel/kernel.max()
     return kernel
 
-train_syn_root = 'images/synthetic_dataset/'
-trainsmission_list,reflection_list=prepare_data(train_syn_root) # image pairs for generating synthetic training images
+train_syn_in = 'images/synthetic_dataset/'
+transmission_list,reflection_list=prepare_data(train_syn_in) # image pairs for generating synthetic training images
 
-directories = ["images/synthetic_dataset/generated/reflection_org/", "images/synthetic_dataset/generated/blended/",
-    "images/synthetic_dataset/generated/reflection/", "images/synthetic_dataset/generated/transmission/"]
+train_syn_out = train_syn_in + 'generated/train/'
+test_syn_out = train_syn_in + 'generated/test/'
 
-directories_test = ["images/synthetic_dataset/generated/reflection_org/test/", "images/synthetic_dataset/generated/blended/test/",
-    "images/synthetic_dataset/generated/reflection/test/", "images/synthetic_dataset/generated/transmission/test/"]
-
-for directory in directories:
+dir_train = [train_syn_out + "reflection_org/", train_syn_out + "blended/", train_syn_out + "reflection/", train_syn_out + "transmission/"]
+dir_test = [test_syn_out + "reflection_org/", test_syn_out + "blended/", test_syn_out + "reflection/", test_syn_out + "transmission/"]
+    
+for directory in dir_train:
     if not os.path.exists(directory):
         os.makedirs(directory)
-for directory in directories_test:
+for directory in dir_test:
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -96,38 +97,39 @@ w=1920
 h=1080
 
 for id, transmission_name in enumerate(transmission_list):
-    r_id = np.random.randint(0, len(syn_image2_list))
 
-    t_image=cv2.imread(transmission_name, -1) #syn_image1_list[id],-1)
+    # create a vignetting mask
+    g_mask=gkern(w,h,3) #np.random.randint(1, 3))
+    g_mask=np.dstack((g_mask,g_mask,g_mask))
+
+    r_id = np.random.randint(0, len(reflection_list))
+
+    t_image=cv2.imread(transmission_name, -1)
     if t_image.shape[0] != h and t_image.shape[1] != w:
         continue
     r_image = cv2.imread(reflection_list[r_id],-1)
     t_image = cv2.cvtColor(t_image, cv2.COLOR_BGR2RGB)
     r_image = cv2.cvtColor(r_image, cv2.COLOR_BGR2RGB)
 
-    # create a vignetting mask
-    g_mask=gkern(w,h,np.random.randint(1, 4))#3)
-    g_mask=np.dstack((g_mask,g_mask,g_mask))
-
-    output_image_t=cv2.resize(np.float32(t_image),(w,h),cv2.INTER_CUBIC)/255.0
-    output_image_r=cv2.resize(np.float32(r_image),(w,h),cv2.INTER_CUBIC)/255.0
+    t_image_out=cv2.resize(np.float32(t_image),(w,h),cv2.INTER_CUBIC)/255.0
+    r_image_out=cv2.resize(np.float32(r_image),(w,h),cv2.INTER_CUBIC)/255.0
     sigma=k_sz[np.random.randint(0, len(k_sz))]
-    output_image_t,output_image_r,input_image=syn_data(output_image_t,output_image_r,sigma)
+    t_image_out,r_image_out,b_image=syn_data(t_image_out,r_image_out,sigma)
 
-    im_0 = Image.fromarray((r_image).astype(np.uint8))
-    im_1  = Image.fromarray((input_image * 255).astype(np.uint8))
-    im_2 = Image.fromarray((output_image_r * 255).astype(np.uint8))
-    im_3 = Image.fromarray((output_image_t * 255).astype(np.uint8))
+    r_image = Image.fromarray((r_image).astype(np.uint8))
+    b_image = Image.fromarray((b_image * 255).astype(np.uint8))
+    r_image_out = Image.fromarray((r_image_out * 255).astype(np.uint8))
+    t_image_out = Image.fromarray((t_image_out * 255).astype(np.uint8))
 
-    file=os.path.splitext(os.path.basename(syn_image1_list[id]))[0]
+    file=os.path.splitext(os.path.basename(transmission_name))[0]
 
     if id%100 == 0:
-        im_0.save(directories_test[0] + file + ".jpeg")
-        im_1.save(directories_test[1] + file + ".jpeg")
-        im_2.save(directories_test[2] + file + ".jpeg")
-        im_3.save(directories_test[3] + file + ".jpeg")
+        r_image.save(dir_test[0] + file + ".jpg")
+        b_image.save(dir_test[1] + file + ".jpg")
+        r_image_out.save(dir_test[2] + file + ".jpg")
+        t_image_out.save(dir_test[3] + file + ".jpg")
     else:
-        im_0.save(directories[0] + file + ".jpeg")
-        im_1.save(directories[1] + file + ".jpeg")
-        im_2.save(directories[2] + file + ".jpeg")
-        im_3.save(directories[3] + file + ".jpeg")
+        r_image.save(dir_train[0] + file + ".jpg")
+        b_image.save(dir_train[1] + file + ".jpg")
+        r_image_out.save(dir_train[2] + file + ".jpg")
+        t_image_out.save(dir_train[3] + file + ".jpg")
