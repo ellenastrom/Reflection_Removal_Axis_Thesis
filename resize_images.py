@@ -1,15 +1,16 @@
 from PIL import Image
 import os, sys
 
-path = "images/chose_model_test"
-#path = ('drive-download-20220309T100926Z-001')
-dirs = os.listdir( path )
+inputpath = "generated_1/transmission/"
+outputpath = inputpath + 'resized/'
+dirs = os.listdir(inputpath)
 
 def resize():
     for item in dirs:
-        if os.path.isfile(path+'/'+item) and (item.endswith('.jpg') or item.endswith('.jpeg')):
-            im = Image.open(path+'/'+item)
+        if os.path.isfile(inputpath+item) and (item.endswith('.jpg') or item.endswith('.jpeg')):
+            im = Image.open(inputpath+item)
             imResize = im.resize((960,540), Image.ANTIALIAS)
-            imResize.save(path +'/'+ item + 'resized.jpg', 'JPEG', quality=90)
+            file=os.path.splitext(os.path.basename(item))[0]
+            imResize.save(outputpath + item + '_resized.jpg', 'JPEG', quality=90)
 
 resize()
