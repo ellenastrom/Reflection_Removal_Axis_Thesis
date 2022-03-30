@@ -3,10 +3,12 @@ import os, sys
 
 inputpath = "generated_1/transmission/"
 outputpath = inputpath + 'resized/'
-dirs = os.listdir(inputpath)
+
+if not os.path.exists(outputpath):
+    os.makedirs(outputpath)
 
 def resize():
-    for item in dirs:
+    for item in os.listdir(inputpath):
         if os.path.isfile(inputpath+item) and (item.endswith('.jpg') or item.endswith('.jpeg')):
             im = Image.open(inputpath+item)
             imResize = im.resize((960,540), Image.ANTIALIAS)
