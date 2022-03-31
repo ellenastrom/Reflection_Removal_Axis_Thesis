@@ -16,13 +16,15 @@ IMG_EXTENSIONS = [
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
-input_path='images/synthetic_dataset/reflection_layer/first_session/'
-output_path='images/synthetic_dataset/reflection_layer/'
+input_path='chosen_reflections/'
+output_path=input_path + 'augmented_images/'
+
+if not os.path.exists(output_path):
+	os.makedirs(output_path)
 
 # iterate through the names of contents of the folder
 for filename in os.listdir(input_path):
 	image_path = os.path.join(input_path, filename)
-	print(image_path)
 	if is_image_file(filename):
 		can_load = True
 		try: 
@@ -31,7 +33,7 @@ for filename in os.listdir(input_path):
 			print('Was not able to load ', image_path)
 			can_load = False
 			continue
-		if can_load and original_img.size == 1920, 1080:
+		if can_load: #and original_img.size == 1920, 1080:
 			vertical_img = original_img.transpose(method=Image.FLIP_TOP_BOTTOM)
 			horz_img = original_img.transpose(method=Image.FLIP_LEFT_RIGHT)
 			both_img = vertical_img.transpose(method=Image.FLIP_LEFT_RIGHT)

@@ -14,12 +14,13 @@ def syn_data(t,r,sigma):
     t=np.power(t,2.2)
     r=np.power(r,2.2)
     
-    sz=int(2*np.ceil(2*sigma)+1)
+    sz=int(2*np.ceil(2*sigma)+1) # controls the size of kernel, the larger the blurrier. Must be an uneven int
+    # sigma controls variance of of the Gaussian filter, the higher value, the blurrier
     r_blur=cv2.GaussianBlur(r,(sz,sz),sigma,sigma,0)
     blend=r_blur+t
     
-    att=0.5+np.random.random()/1.5 #1.08+np.random.random()/10.0
-    print('att: ', att)
+    # higher value gives higher threshold for what is kept in the reflection image
+    att= 0.55+np.random.random()/10 #I like this value but original was #1.08+np.random.random()/10.0
     
     for i in range(3):
         maski=blend[:,:,i]>1
@@ -30,7 +31,7 @@ def syn_data(t,r,sigma):
 
     h,w=r_blur.shape[0:2]
     alpha1=g_mask
-    alpha2 = 1-np.random.random()/5.0;
+    alpha2 = 1-np.random.random()/5.0; #the lower value the darker blended image. Not sure we should make any changes
     r_blur_mask=np.multiply(r_blur,alpha1)
     blend=r_blur_mask+t*alpha2
     
@@ -92,14 +93,14 @@ for directory in dir_test:
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-k_sz=np.linspace(1,5,80) # for synthetic images
+k_sz=np.linspace(0.2, 4, 80) #1,5,80) # for synthetic images
 w=1920
 h=1080
 
 for id, transmission_name in enumerate(transmission_list):
 
     # create a vignetting mask
-    g_mask=gkern(w,h,3) #np.random.randint(1, 3))
+    g_mask=gkern(w,h,np.random.randint(1, 3)) # 3))
     g_mask=np.dstack((g_mask,g_mask,g_mask))
 
     r_id = np.random.randint(0, len(reflection_list))
