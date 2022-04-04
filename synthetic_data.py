@@ -10,6 +10,43 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
 
+
+def get_random_crop(image, crop_height, crop_width):
+    max_x = image.shape[1] - crop_width
+    max_y = image.shape[0] - crop_height
+
+    x = np.random.randint(0, max_x)
+    y = np.random.randint(0, max_y)
+
+    crop = image[y: y + crop_height, x: x + crop_width]
+
+    return crop
+
+
+def random_crop_images(reflection, transmission):
+    # Opens a image in RGB mode![]()
+    #cv2.namedWindow("output", cv2.WINDOW_NORMAL)
+    #cv2.namedWindow("output2", cv2.WINDOW_NORMAL)
+   # im_copy_ref = reflection
+   # im_copy_trans = transmission
+
+    frame = 80
+    rand_x_crop = random.randint(0, 200)
+    rand_y_crop_top = random.randint(0, 200)
+    rand_y_crop_bottom = random.randint(0, 200)
+
+    reflection_crop = reflection[frame + rand_y_crop_bottom:1080 - frame - rand_y_crop_top,
+                      frame + rand_x_crop:1920 - frame - rand_x_crop]
+    h, w, c = reflection_crop.shape
+    transmission_crop = get_random_crop(transmission, h, w)
+
+    #cv2.imshow("output", transmission_crop)
+    #cv2.imshow("output2", reflection_crop)
+    #print(transmission_crop.shape)
+    #print(reflection_crop.shape)
+    return reflection_crop, transmission_crop
+
+
 def syn_data(t,r,sigma, threshold):
     t=np.power(t,2.2)
     r=np.power(r,2.2)
@@ -95,16 +132,13 @@ for directory in dir_test:
         print(directory)
 
 k_sz=np.linspace(0.2, 4, 80) #1,5,80) # for synthetic images
-w=1920
-h=1080
 
-for id, transmission_name in enumerate(transmission_list):
-
-    # create a vignetting mask
-    g_mask=gkern(w,h,np.random.randint(1, 3)) # 3))
-    g_mask=np.dstack((g_mask,g_mask,g_mask))
+nbr_loops = 10
+for i in range(0,nbr_loops): 
+#for id, transmission_name in enumerate(transmission_list):
 
     r_id = np.random.randint(0, len(reflection_list))
+    t_id = np.random.randint(0, len(transmission_list))
     r_name=os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
 
     if r_name.startswith('first'):
@@ -119,9 +153,19 @@ for id, transmission_name in enumerate(transmission_list):
         threshold = 0.3
 
     t_image=cv2.imread(transmission_name, -1)
-    if t_image.shape[0] != h and t_image.shape[1] != w:
-        continue
+    #if t_image.shape[0] != h and t_image.shape[1] != w:
+     #   continue
     r_image = cv2.imread(reflection_list[r_id],-1)
+    
+    r_image, t_image =  random_crop_images(r_image,t_image)
+    
+    w=r_image.shape[1]
+    h=r_image.shape[0]
+    
+    # create a vignetting mask
+    g_mask=gkern(w,h,np.random.randint(1, 3)) # 3))
+    g_mask=np.dstack((g_mask,g_mask,g_mask))
+    
     t_image = cv2.cvtColor(t_image, cv2.COLOR_BGR2RGB)
     r_image = cv2.cvtColor(r_image, cv2.COLOR_BGR2RGB)
 
@@ -136,7 +180,7 @@ for id, transmission_name in enumerate(transmission_list):
     t_image_out = Image.fromarray((t_image_out * 255).astype(np.uint8))
 
     file=os.path.splitext(os.path.basename(transmission_name))[0]
-    file = r_name
+    file = r_name + '_' + i
 
     if id%5 == 0:
         r_image.save(dir_test[0] + file + ".jpg")
