@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import os
 import scipy.stats as st
 from PIL import Image
+import random
+import sys
 
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -87,8 +89,10 @@ def prepare_data(train_path):
     input_names=[]
     transmission_images=[]
     reflection_images=[]
-    train_t_gt = train_path + "transmission_layer/"
-    train_r_gt = train_path + "reflection_layer/"
+    train_t_gt = os.path.join(train_path, 'transmission_layer') 
+    #train_path + "transmission_layer/"
+    train_r_gt = os.path.join(train_path, 'reflection_layer')
+    #train_path + "reflection_layer/"
     for root, _, fnames in sorted(os.walk(train_t_gt)):
         for fname in fnames:
             if is_image_file(fname):
@@ -114,11 +118,15 @@ def gkern(width=100, height=100, nsig=1):
     kernel = kernel/kernel.max()
     return kernel
 
-train_syn_in = 'images/synthetic_dataset/'
+if sys.argv[1]==None:
+	train_syn_in = '/synthetic_dataset/'
+else:
+	train_syn_in = sys.argv[1]
+	
 transmission_list,reflection_list=prepare_data(train_syn_in) # image pairs for generating synthetic training images
 
-train_syn_out = train_syn_in + 'generated/train/'
-test_syn_out = train_syn_in + 'generated/test/'
+train_syn_out = os.path.join(train_syn_in, 'generated/train/')
+test_syn_out = os.path.join(train_syn_in, 'generated/test/')
 
 dir_train = [train_syn_out + "reflection_org/", train_syn_out + "blended/", train_syn_out + "reflection/", train_syn_out + "transmission/"]
 dir_test = [test_syn_out + "reflection_org/", test_syn_out + "blended/", test_syn_out + "reflection/", test_syn_out + "transmission/"]
@@ -133,7 +141,7 @@ for directory in dir_test:
 
 k_sz=np.linspace(0.2, 4, 80) #1,5,80) # for synthetic images
 
-nbr_loops = 10
+nbr_loops = int(sys.argv[2])
 for i in range(0,nbr_loops): 
 #for id, transmission_name in enumerate(transmission_list):
 
@@ -152,7 +160,7 @@ for i in range(0,nbr_loops):
     elif r_name.startswith('victor'):
         threshold = 0.3
 
-    t_image=cv2.imread(transmission_name, -1)
+    t_image=cv2.imread(transmission_list[t_id], -1)
     #if t_image.shape[0] != h and t_image.shape[1] != w:
      #   continue
     r_image = cv2.imread(reflection_list[r_id],-1)
@@ -179,17 +187,17 @@ for i in range(0,nbr_loops):
     r_image_out = Image.fromarray((r_image_out * 255).astype(np.uint8))
     t_image_out = Image.fromarray((t_image_out * 255).astype(np.uint8))
 
-    file=os.path.splitext(os.path.basename(transmission_name))[0]
-    file = r_name + '_' + i
+    #file=os.path.splitext(os.path.basename(transmission_name))[0]
+    file = r_name + '_' + str(i)
 
-    if id%5 == 0:
-        r_image.save(dir_test[0] + file + ".jpg")
-        b_image.save(dir_test[1] + file + ".jpg")
-        r_image_out.save(dir_test[2] + file + ".jpg")
-        t_image_out.save(dir_test[3] + file + ".jpg")        
-        print(dir_test[2] + file + ".jpg")
-    else:
-        r_image.save(dir_train[0] + file + ".jpg")
-        b_image.save(dir_train[1] + file + ".jpg")
-        r_image_out.save(dir_train[2] + file + ".jpg")
-        t_image_out.save(dir_train[3] + file + ".jpg")
+    #if id%5 == 0:
+       # r_image.save(dir_test[0] + file + ".jpg")
+        #b_image.save(dir_test[1] + file + ".jpg")
+        #r_image_out.save(dir_test[2] + file + ".jpg")
+        #t_image_out.save(dir_test[3] + file + ".jpg")        
+        #print(dir_test[2] + file + ".jpg")
+    #else:
+    r_image.save(dir_train[0] + file + ".jpg")
+    b_image.save(dir_train[1] + file + ".jpg")
+    r_image_out.save(dir_train[2] + file + ".jpg")
+    t_image_out.save(dir_train[3] + file + ".jpg")
