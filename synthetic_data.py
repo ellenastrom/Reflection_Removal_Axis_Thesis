@@ -10,7 +10,7 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
 
-def syn_data(t,r,sigma):
+def syn_data(t,r,sigma, threshold):
     t=np.power(t,2.2)
     r=np.power(r,2.2)
     
@@ -20,7 +20,7 @@ def syn_data(t,r,sigma):
     blend=r_blur+t
     
     # higher value gives higher threshold for what is kept in the reflection image
-    att= 0.55+np.random.random()/10 #I like this value but original was #1.08+np.random.random()/10.0
+    att= threshold + np.random.random()/10 #I like this value but original was #1.08+np.random.random()/10.0
     
     for i in range(3):
         maski=blend[:,:,i]>1
@@ -92,6 +92,7 @@ for directory in dir_train:
 for directory in dir_test:
     if not os.path.exists(directory):
         os.makedirs(directory)
+        print(directory)
 
 k_sz=np.linspace(0.2, 4, 80) #1,5,80) # for synthetic images
 w=1920
@@ -104,6 +105,18 @@ for id, transmission_name in enumerate(transmission_list):
     g_mask=np.dstack((g_mask,g_mask,g_mask))
 
     r_id = np.random.randint(0, len(reflection_list))
+    r_name=os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
+
+    if r_name.startswith('first'):
+        threshold = 0.55
+    elif r_name.startswith('P5655'):
+        threshold = 0.05
+    elif r_name.startswith('Q6135'):
+        threshold = 0.25
+    elif r_name.startswith('Q6315'):
+        threshold = 0.35
+    elif r_name.startswith('victor'):
+        threshold = 0.3
 
     t_image=cv2.imread(transmission_name, -1)
     if t_image.shape[0] != h and t_image.shape[1] != w:
@@ -115,7 +128,7 @@ for id, transmission_name in enumerate(transmission_list):
     t_image_out=cv2.resize(np.float32(t_image),(w,h),cv2.INTER_CUBIC)/255.0
     r_image_out=cv2.resize(np.float32(r_image),(w,h),cv2.INTER_CUBIC)/255.0
     sigma=k_sz[np.random.randint(0, len(k_sz))]
-    t_image_out,r_image_out,b_image=syn_data(t_image_out,r_image_out,sigma)
+    t_image_out,r_image_out,b_image=syn_data(t_image_out,r_image_out,sigma, threshold)
 
     r_image = Image.fromarray((r_image).astype(np.uint8))
     b_image = Image.fromarray((b_image * 255).astype(np.uint8))
@@ -123,12 +136,14 @@ for id, transmission_name in enumerate(transmission_list):
     t_image_out = Image.fromarray((t_image_out * 255).astype(np.uint8))
 
     file=os.path.splitext(os.path.basename(transmission_name))[0]
+    file = r_name
 
-    if id%100 == 0:
+    if id%5 == 0:
         r_image.save(dir_test[0] + file + ".jpg")
         b_image.save(dir_test[1] + file + ".jpg")
         r_image_out.save(dir_test[2] + file + ".jpg")
-        t_image_out.save(dir_test[3] + file + ".jpg")
+        t_image_out.save(dir_test[3] + file + ".jpg")        
+        print(dir_test[2] + file + ".jpg")
     else:
         r_image.save(dir_train[0] + file + ".jpg")
         b_image.save(dir_train[1] + file + ".jpg")
