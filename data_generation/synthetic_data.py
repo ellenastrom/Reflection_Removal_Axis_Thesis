@@ -125,19 +125,19 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
         t_image = Image.open(transmission_list[t_id])
         r_image = Image.open(reflection_list[r_id])
 
+        r_name = os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
+        t_name = os.path.splitext(os.path.basename(transmission_list[t_id]))[0]
+
         t_image = augment_image(t_image, False)
         r_image = augment_image(r_image, True)
 
-        r_image, t_image = random_crop_images(r_image, t_image)
+        r_image, t_image = random_crop_images(r_image, t_image, 'waterstamp' in r_name)
 
         w = r_image.shape[1]
         h = r_image.shape[0]
 
         t_image_out = cv2.resize(np.float32(t_image), (w, h), cv2.INTER_CUBIC) / 255.0
         r_image_out = cv2.resize(np.float32(r_image), (w, h), cv2.INTER_CUBIC) / 255.0
-
-        r_name = os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
-        # t_name=os.path.splitext(os.path.basename(transmission_name))[0]
 
         if r_name.startswith('first'):
             threshold = 0.55
