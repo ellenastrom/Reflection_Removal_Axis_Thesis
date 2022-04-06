@@ -99,11 +99,9 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
     test_syn_out = os.path.join(train_syn_in, 'generated/test')
 
     dir_train = [os.path.join(train_syn_out, 'reflection_org'), os.path.join(train_syn_out, 'blended'),
-                 os.path.join(train_syn_out, 'reflection'),
-                 os.path.join(train_syn_out, 'transmission')]
+                 os.path.join(train_syn_out, 'reflection'), os.path.join(train_syn_out, 'transmission')]
     dir_test = [os.path.join(test_syn_out, 'reflection_org'), os.path.join(test_syn_out, 'blended'),
-                os.path.join(test_syn_out, 'reflection'),
-                os.path.join(test_syn_out, 'transmission')]
+                os.path.join(test_syn_out, 'reflection'), os.path.join(test_syn_out, 'transmission')]
 
     for directory in dir_train:
         if not os.path.exists(directory):
@@ -120,29 +118,12 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
         nbr_images = nbr_train_images
 
     for i in range(0, nbr_images):
-        # for id, transmission_name in enumerate(transmission_list):
 
         r_id = np.random.randint(0, len(reflection_list))
         t_id = np.random.randint(0, len(transmission_list))
 
-        trans_path = transmission_list[t_id]
-        ref_path = reflection_list[r_id]
-
-        r_name = os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
-
-        if r_name.startswith('first'):
-            threshold = 0.55
-        elif r_name.startswith('P5655'):
-            threshold = 0.05
-        elif r_name.startswith('Q6135'):
-            threshold = 0.25
-        elif r_name.startswith('Q6315'):
-            threshold = 0.35
-        elif r_name.startswith('victor'):
-            threshold = 0.3
-
-        t_image = Image.open(trans_path)
-        r_image = Image.open(ref_path)
+        t_image = Image.open(transmission_list[t_id])
+        r_image = Image.open(reflection_list[r_id])
 
         t_image = augment_image(t_image, False)
         r_image = augment_image(r_image, True)
@@ -154,6 +135,20 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
 
         t_image_out = cv2.resize(np.float32(t_image), (w, h), cv2.INTER_CUBIC) / 255.0
         r_image_out = cv2.resize(np.float32(r_image), (w, h), cv2.INTER_CUBIC) / 255.0
+
+        r_name = os.path.splitext(os.path.basename(reflection_list[r_id]))[0]
+        # t_name=os.path.splitext(os.path.basename(transmission_name))[0]
+
+        if r_name.startswith('first'):
+            threshold = 0.55
+        elif r_name.startswith('P5655'):
+            threshold = 0.05
+        elif r_name.startswith('Q6135'):
+            threshold = 0.25
+        elif r_name.startswith('Q6315'):
+            threshold = 0.35
+        elif r_name.startswith('victor'):
+            threshold = 0.3
 
         k_sz = np.linspace(0.2, 4, 80)  # 1,5,80) # for synthetic images
         sigma = k_sz[np.random.randint(0, len(k_sz))]
@@ -169,7 +164,6 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
         r_image_out = Image.fromarray((r_image_out * 255).astype(np.uint8))
         t_image_out = Image.fromarray((t_image_out * 255).astype(np.uint8))
 
-        # file=os.path.splitext(os.path.basename(transmission_name))[0]
         file = r_name + '_' + str(i) + '.jpg'
 
         if test:
@@ -191,7 +185,9 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 0:
+        print('No inputs, try again')
+    elif len(sys.argv) == 2:
         create_data(str(sys.argv[1]))
     elif len(sys.argv) == 3:
         create_data(str(sys.argv[1]), int(sys.argv[2]))
