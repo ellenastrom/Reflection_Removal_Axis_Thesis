@@ -29,12 +29,14 @@ def random_crop_images(reflection, transmission, contains_waterstamp):
 
     frame = 80
     if contains_waterstamp:
-        rand_x_crop = frame + random.randint(0, 50) * 4
+        rand_y_crop_top = frame + random.randint(0, 10) * 4
+        rand_y_crop_bottom = frame + random.randint(0, 10) * 4
+        frame = frame*2
     else:
-        rand_x_crop = random.randint(0, 50) * 4
-    rand_y_crop_top = frame + random.randint(0, 50) * 4
-    rand_y_crop_bottom = frame + random.randint(0, 50) * 4
-
+        rand_y_crop_top = random.randint(0, 50) * 4
+        rand_y_crop_bottom = random.randint(0, 50) * 4
+    rand_x_crop = frame + random.randint(0, 50) * 4
+    
     reflection_crop = reflection[rand_y_crop_bottom:1080 - rand_y_crop_top,
                       rand_x_crop:1920 - rand_x_crop]
     h, w, c = reflection_crop.shape

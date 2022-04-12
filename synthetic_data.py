@@ -139,16 +139,20 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
         t_image_out = cv2.resize(np.float32(t_image), (w, h), cv2.INTER_CUBIC) / 255.0
         r_image_out = cv2.resize(np.float32(r_image), (w, h), cv2.INTER_CUBIC) / 255.0
 
-        if r_name.startswith('first'):
+        if r_name.startswith('Q6315_1st'):
             threshold = 0.55
+        elif r_name.startswith('Q6315_2nd'):
+            threshold = 0.37
+        elif r_name.startswith('Q6315_3rd'):
+            threshold = 0.30
         elif r_name.startswith('P5655'):
-            threshold = 0.05
-        elif r_name.startswith('Q6135'):
             threshold = 0.25
-        elif r_name.startswith('Q6315'):
-            threshold = 0.35
-        elif r_name.startswith('victor'):
-            threshold = 0.3
+        elif r_name.startswith('Q6135_1st'):
+            threshold = 0.25
+        elif r_name.startswith('Q6135_2nd'):
+            threshold = 0.22
+        elif r_name.startswith('Q6075'):
+            threshold = 0.33
 
         k_sz = np.linspace(0.2, 4, 80)  # 1,5,80) # for synthetic images
         sigma = k_sz[np.random.randint(0, len(k_sz))]
@@ -182,7 +186,6 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
             b_image.save(os.path.join(dir_train[1], file))
             r_image_out.save(os.path.join(dir_train[2], file))
             t_image_out.save(os.path.join(dir_train[3], file))
-
 
 if __name__ == "__main__":
     if len(sys.argv) == 0:
