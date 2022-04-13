@@ -21,11 +21,6 @@ def get_random_crop(image, crop_height, crop_width):
 
 
 def random_crop_images(reflection, transmission, contains_waterstamp):
-    # Opens a image in RGB mode![]()
-    # cv2.namedWindow("output", cv2.WINDOW_NORMAL)
-    # cv2.namedWindow("output2", cv2.WINDOW_NORMAL)
-    # im_copy_ref = reflection
-    # im_copy_trans = transmission
 
     frame = 80
     if contains_waterstamp:
@@ -33,8 +28,8 @@ def random_crop_images(reflection, transmission, contains_waterstamp):
         rand_y_crop_bottom = frame + random.randint(0, 10) * 4
         frame = frame*2
     else:
-        rand_y_crop_top = random.randint(0, 50) * 4
-        rand_y_crop_bottom = random.randint(0, 50) * 4
+        rand_y_crop_top = random.randint(1, 50) * 4
+        rand_y_crop_bottom = random.randint(1, 50) * 4
     rand_x_crop = frame + random.randint(0, 50) * 4
     
     reflection_crop = reflection[rand_y_crop_bottom:1080 - rand_y_crop_top,
@@ -42,8 +37,4 @@ def random_crop_images(reflection, transmission, contains_waterstamp):
     h, w, c = reflection_crop.shape
     transmission_crop = get_random_crop(transmission, h, w)
 
-    # cv2.imshow("output", transmission_crop)
-    # cv2.imshow("output2", reflection_crop)
-    # print(transmission_crop.shape)
-    # print(reflection_crop.shape)
     return reflection_crop, transmission_crop

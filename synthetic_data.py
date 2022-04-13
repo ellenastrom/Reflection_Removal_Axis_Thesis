@@ -151,8 +151,10 @@ def create_data(path, nbr_train_images=4000, test=False, test_ratio=0.1):
             threshold = 0.25
         elif r_name.startswith('Q6135_2nd'):
             threshold = 0.22
-        elif r_name.startswith('Q6075'):
-            threshold = 0.33
+        elif r_name.startswith('Q6075_d'):
+            threshold = 0.30
+        elif r_name.startswith('Q6075_l'):
+            threshold = 0.40
 
         k_sz = np.linspace(0.2, 4, 80)  # 1,5,80) # for synthetic images
         sigma = k_sz[np.random.randint(0, len(k_sz))]
