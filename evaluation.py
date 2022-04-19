@@ -76,8 +76,8 @@ class Evaluator:
         image_list_result = []
         image_list_test = []
 
-        for img_bg, img_res, img_test in tqdm(zip(sorted(os.listdir(self.dir_bg)), sorted(os.listdir(self.dir_res)),
-                                              sorted(os.listdir(self.dir_test)))):
+        for img_bg, img_res, img_test in tqdm(zip(sorted(os.listdir(self.dir_bg), key=str.casefold), sorted(os.listdir(self.dir_res), key=str.casefold),
+                                              sorted(os.listdir(self.dir_test), key=str.casefold))):
             ground_truth_image_path = os.path.join(self.dir_bg, img_bg)
             result_image_path = os.path.join(self.dir_res, img_res)
             test_image_path = os.path.join(self.dir_test, img_test)
@@ -92,7 +92,7 @@ class Evaluator:
                     print('Was not able to load ' + ground_truth_image_path + 'or' + result_image_path)
                     can_load = False
                     continue
-                if can_load and ground_truth_img.size == (1920, 1080) and result_img.size == (1920, 1080):
+                if can_load:
                     image_list_gt.append(ground_truth_image_path)
                     image_list_result.append(result_image_path)
                     image_list_test.append(test_image_path)
@@ -175,7 +175,7 @@ class Evaluator:
         image_list_original = []
         image_list_result = []
 
-        for img_test, img_res in tqdm(zip(sorted(os.listdir(self.dir_test)), sorted(os.listdir(self.dir_res)))):
+        for img_test, img_res in tqdm(zip(sorted(os.listdir(self.dir_test),key=str.casefold), sorted(os.listdir(self.dir_res), key=str.casefold))):
             original_image_path = os.path.join(self.dir_test, img_test)
             result_image_path = os.path.join(self.dir_res, img_res)
             if is_image_file(original_image_path) and is_image_file(result_image_path):
@@ -187,7 +187,7 @@ class Evaluator:
                     print('Was not able to load ' + original_image_path + 'or' + result_image_path)
                     can_load = False
                     continue
-                if can_load and ground_truth_img.size == (1920, 1080) and result_img.size == (1920, 1080):
+                if can_load:
                     image_list_original.append(original_image_path)
                     image_list_result.append(result_image_path)
                     rank_list.append(0)
