@@ -1,18 +1,20 @@
 from PIL import Image
 import os, sys
 
-inputpath = "generated_1/transmission/"
-outputpath = inputpath + 'resized/'
+inputpath = "/home/ellena/Documents/test_real_final/test_real_reflections"
+outputpath = "/home/ellena/Documents/test_real_final/test_real_reflections_256x256"
 
 if not os.path.exists(outputpath):
     os.makedirs(outputpath)
 
 def resize():
     for item in os.listdir(inputpath):
-        if os.path.isfile(inputpath+item) and (item.endswith('.jpg') or item.endswith('.jpeg')):
-            im = Image.open(inputpath+item)
-            imResize = im.resize((960,540), Image.ANTIALIAS)
+    
+        if os.path.isfile(os.path.join(inputpath,item)) and (item.endswith('.jpg') or item.endswith('.jpeg')):
+            im = Image.open(os.path.join(inputpath,item))
+            imResize = im.resize((256,256), Image.ANTIALIAS)
             file=os.path.splitext(os.path.basename(item))[0]
-            imResize.save(outputpath + item + '_resized.jpg', 'JPEG', quality=90)
+            imResize.save(os.path.join(outputpath, file), 'JPEG', quality=90)
+            
 
 resize()
