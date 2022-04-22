@@ -13,11 +13,15 @@ from tqdm import tqdm
 
 date = str(datetime.now())
 parser = argparse.ArgumentParser('Evaluation')
-parser.add_argument('--background_dir', default="./background", help="path to background image folder, not used for real data")
+parser.add_argument('--background_dir', default="./background",
+                    help="path to background image folder, not used for real data")
 parser.add_argument('--filtered_dir', default="./filtered", help="path to filtered image folder")
 parser.add_argument('--original_data_dir', default="./original", help="path to original image folder")
 parser.add_argument('--is_real_data', type=bool, default=False, help="is True if evaluating real data otherwise False")
-parser.add_argument('--nbr_marked', type=int, default=5, help="nbr of best and worst metrics to mark, not used for real data")
+parser.add_argument('--collage_dir', default='./Collages',
+                    help="Directory for pre-saved collages, only used for real data evaluation")
+parser.add_argument('--nbr_marked', type=int, default=5,
+                    help="nbr of best and worst metrics to mark, not used for real data")
 parser.add_argument('--save_dir', default='./metrics_results_DATA_SET_NAME_{}.xlsx'.format(date),
                     help="path where to save metric results")
 
@@ -46,8 +50,9 @@ class Evaluator:
         self.dir_res = args.filtered_dir
         self.dir_test = args.original_data_dir
         self.dir_save = args.save_dir
+        self.collage_dir = args.collage_dir
         if not self.dir_save.endswith('xlsx'):
-            self.dir_save=os.path.normpath(self.dir_save+'/metrics_results_DATA_SET_NAME_{}.xlsx'.format(date))
+            self.dir_save = os.path.normpath(self.dir_save + '/metrics_results_DATA_SET_NAME_{}.xlsx'.format(date))
         self.nbr_marked = args.nbr_marked
         self.is_real_data = args.is_real_data
 
@@ -76,8 +81,9 @@ class Evaluator:
         image_list_result = []
         image_list_test = []
 
-        for img_bg, img_res, img_test in tqdm(zip(sorted(os.listdir(self.dir_bg), key=str.casefold), sorted(os.listdir(self.dir_res), key=str.casefold),
-                                              sorted(os.listdir(self.dir_test), key=str.casefold))):
+        for img_bg, img_res, img_test in tqdm(zip(sorted(os.listdir(self.dir_bg), key=str.casefold),
+                                                  sorted(os.listdir(self.dir_res), key=str.casefold),
+                                                  sorted(os.listdir(self.dir_test), key=str.casefold))):
             ground_truth_image_path = os.path.join(self.dir_bg, img_bg)
             result_image_path = os.path.join(self.dir_res, img_res)
             test_image_path = os.path.join(self.dir_test, img_test)
@@ -174,28 +180,28 @@ class Evaluator:
         print("results saved in: " + self.dir_save)
 
     def evaluate_real_data(self):
+        grade_list = []
+        image_list_collage = []
         rank_list = []
-        image_list_original = []
-        image_list_result = []
 
-        for img_test, img_res in tqdm(zip(sorted(os.listdir(self.dir_test),key=str.casefold), sorted(os.listdir(self.dir_res), key=str.casefold))):
-            original_image_path = os.path.join(self.dir_test, img_test)
-            result_image_path = os.path.join(self.dir_res, img_res)
-            if is_image_file(original_image_path) and is_image_file(result_image_path):
+        for img_collage in tqdm(sorted(os.listdir(self.collage_dir), key=str.casefold)):
+            collage_image_path = os.path.join(self.collage_dir, img_collage)
+
+            if is_image_file(collage_image_path):
                 can_load = True
                 try:
-                    ground_truth_img = Image.open(original_image_path)
-                    result_img = Image.open(result_image_path)
+                    collage_img = Image.open(collage_image_path)
                 except:
-                    print('Was not able to load ' + original_image_path + 'or' + result_image_path)
+                    print('Was not able to load ' + collage_image_path)
                     can_load = False
                     continue
                 if can_load:
-                    image_list_original.append(original_image_path)
-                    image_list_result.append(result_image_path)
-                    rank_list.append(0)
+                    image_list_collage.append(collage_image_path)
+                    grade_list.append(0)
+                    rank_list.append(' ')
 
-        d = {'Original': image_list_original, 'Filtered': image_list_result, 'Rank': rank_list}
+        d = {'Results': image_list_collage, 'DADNet': grade_list, 'ERRNet': grade_list, 'IBCLN': grade_list,
+             'RAGNet': grade_list, 'Rank': rank_list}
         df = pd.DataFrame(data=d)
         df.to_excel(self.dir_save, index=False, sheet_name='sheet1')
 
@@ -205,16 +211,17 @@ class Evaluator:
         for i in range(2, len(rank_list) + 2):
             ws[i][0].value = '=HYPERLINK("{}", "im{}")'.format(ws[i][0].value, i - 1)
             ws[i][0].style = 'Hyperlink'
-            ws[i][1].value = '=HYPERLINK("{}", "im{}")'.format(ws[i][1].value, i - 1)
-            ws[i][1].style = 'Hyperlink'
 
-        ws[int(len(rank_list) + 3)][1].value = 'mean:'
-        ws[int(len(rank_list) + 4)][1].value = 'median:'
-        ws[int(len(rank_list) + 5)][1].value = 'std:'
+        ws[int(len(rank_list) + 3)][0].value = 'mean:'
+        ws[int(len(rank_list) + 4)][0].value = 'median:'
+        ws[int(len(rank_list) + 5)][0].value = 'std:'
+        for i in range(1, 5):
+            col = '{}'.format(chr(ord('A') + i))
+            ws[len(rank_list) + 3][i].value = '=AVERAGE({}{}:{}{})'.format(col, 2, col, len(rank_list) + 1)
+            ws[len(rank_list) + 4][i].value = '=MEDIAN({}{}:{}{})'.format(col, 2, col, len(rank_list) + 1)
+            ws[len(rank_list) + 5][i].value = '=STDEV({}{}:{}{})'.format(col, 2, col, len(rank_list) + 1)
 
-        ws[len(rank_list) + 3][2].value = '=AVERAGE(C{}:C{})'.format(2, len(rank_list) + 1)
-        ws[len(rank_list) + 4][2].value = '=MEDIAN(C{}:C{})'.format(2, len(rank_list) + 1)
-        ws[len(rank_list) + 5][2].value = '=STDEV(C{}:C{})'.format(2, len(rank_list) + 1)
+        ws[len(rank_list) + 3][5].value = '=INDEX(F2:F{0}, MODE(MATCH(F2:F{0}, F2:F{0}, 0)))'.format(len(rank_list) + 1)
 
         wb.save(self.dir_save)
         print("results saved in: " + self.dir_save)
