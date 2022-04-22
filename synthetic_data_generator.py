@@ -79,8 +79,7 @@ def syn_data(t, r, sigma, threshold, g_mask):
     t = np.power(t, 2.2)
     r = np.power(r, 2.2)
 
-    sz = int(
-        2 * np.ceil(2 * sigma) + 1)  # controls the size of kernel, the larger the blurrier. Must be an uneven int
+    sz = int(2 * np.ceil(2 * sigma) + 1)  # controls the size of kernel, the larger the blurrier. Must be an uneven int
     # sigma controls variance of of the Gaussian filter, the higher value, the blurrier
     r_blur = cv2.GaussianBlur(r, (sz, sz), sigma, sigma, 0)
     blend = r_blur + t

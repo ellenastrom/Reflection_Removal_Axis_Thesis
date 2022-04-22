@@ -97,6 +97,9 @@ class Evaluator:
                     image_list_result.append(result_image_path)
                     image_list_test.append(test_image_path)
 
+                    if len(result_img.split()) == 4:
+                        result_img = result_img.convert('RGB')
+
                     ground_truth_img = img_as_float(ground_truth_img)
                     result_img = img_as_float(result_img)
 
