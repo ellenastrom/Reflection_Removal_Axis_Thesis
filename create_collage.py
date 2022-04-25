@@ -29,12 +29,11 @@ def add_title(image_path, text):
 
     font = ImageFont.truetype('Ubuntu-R.ttf', font_size)
     draw = PIL.ImageDraw.Draw(original)
-    print(text)
-    if text != 'Real_Original':
-        draw.text((0, 0), 'filtered by: ' + text, font=font, fill='yellow')
-    else:
-        print('hehehe')
+    if 'real' or 'original' in text.lower():
         draw.text((0, 0), 'Unfiltered image', font=font, fill='yellow')
+
+    else:
+        draw.text((0, 0), 'filtered by: ' + text, font=font, fill='yellow')
     image_name = os.path.split(image_path)[1]
     name_extension = '{}_'.format(text)
     new_name = name_extension + image_name
@@ -47,7 +46,8 @@ def create_collage(width, height, listofimages, collage_nbr, save_path):
     rows = 4
     thumbnail_width = width // cols
     thumbnail_height = height // rows
-    size = thumbnail_width, thumbnail_height
+    spacing = 20
+    size = thumbnail_width-spacing, thumbnail_height-spacing
     new_im = Image.new('RGB', (width, height))
     ims = []
     for im in listofimages:
@@ -60,8 +60,7 @@ def create_collage(width, height, listofimages, collage_nbr, save_path):
     y = 0
     for col in range(cols):
         for row in range(rows):
-            print(i, x, y)
-            new_im.paste(ims[i], (x, y))
+            new_im.paste(ims[i], (x+int(spacing/2), y))
             i += 1
             y += thumbnail_height
         x += thumbnail_width
@@ -83,8 +82,7 @@ class Collage:
 
         sub_dir_list = []
         for sub_dir in sorted(os.listdir(path)):
-            print(sub_dir)
-            if sub_dir != 'Collages':
+            if 'dad' or 'err' or 'ibcln' or 'rag' in sub_dir.lower():
                 sub_dir_list.append(sub_dir)
         collage_nbr = 0
         for im_path_dad, im_path_err, im_path_ibcln, im_path_rag, im_path_org in tqdm(
@@ -98,6 +96,7 @@ class Collage:
                     im_path_ibcln) and is_image_file(im_path_rag) and is_image_file(im_path_rag):
                 can_load = True
                 try:
+
                     im_dad_text = add_title(os.path.join(path, sub_dir_list[0], im_path_dad), sub_dir_list[0])
                     im_err_text = add_title(os.path.join(path, sub_dir_list[1], im_path_err), sub_dir_list[1])
                     im_ibcln_text = add_title(os.path.join(path, sub_dir_list[2], im_path_ibcln), sub_dir_list[2])
@@ -117,8 +116,7 @@ class Collage:
                     list_of_images.append(im_org_text)
                     list_of_images.append(im_org_text)
                     list_of_images.append(im_org_text)
-
-                create_collage(450, 900, list_of_images, collage_nbr, path)
+                create_collage(550, 1100, list_of_images, collage_nbr, path)
 
 
 def main():
