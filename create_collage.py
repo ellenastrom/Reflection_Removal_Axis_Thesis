@@ -28,11 +28,10 @@ def add_title(image_path, text):
 
     font = ImageFont.truetype('Ubuntu-R.ttf', font_size)
     draw = PIL.ImageDraw.Draw(original)
-    if 'real' or 'original' in text.lower():
+    if any(x in text.lower() for x in ['real', 'original']):
         draw.text((0, 0), 'Unfiltered image', font=font, fill='yellow')
-
     else:
-        draw.text((0, 0), 'filtered by: ' + text, font=font, fill='yellow')
+        draw.text((0, 0), 'Filtered by: ' + text, font=font, fill='yellow')
     return original
 
 
@@ -76,7 +75,7 @@ class Collage:
 
         sub_dir_list = []
         for sub_dir in sorted(os.listdir(path)):
-            if 'dad' or 'err' or 'ibcln' or 'rag' in sub_dir.lower():
+            if any(x in sub_dir.lower() for x in ['dad', 'err', 'ibcln', 'rag', 'real']):
                 sub_dir_list.append(sub_dir)
         collage_nbr = 0
         for im_path_dad, im_path_err, im_path_ibcln, im_path_rag, im_path_org in tqdm(
@@ -90,7 +89,6 @@ class Collage:
                     im_path_ibcln) and is_image_file(im_path_rag) and is_image_file(im_path_rag):
                 can_load = True
                 try:
-
                     im_dad_text = add_title(os.path.join(path, sub_dir_list[0], im_path_dad), sub_dir_list[0])
                     im_err_text = add_title(os.path.join(path, sub_dir_list[1], im_path_err), sub_dir_list[1])
                     im_ibcln_text = add_title(os.path.join(path, sub_dir_list[2], im_path_ibcln), sub_dir_list[2])
