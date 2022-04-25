@@ -23,7 +23,6 @@ def is_image_file(filename):
 
 def add_title(image_path, text):
     original = PIL.Image.open(image_path)
-    # original = original.resize((256, 256), Image.ANTIALIAS)
     rows, cols = original.size
     font_size = int(rows / 20)
 
@@ -34,11 +33,8 @@ def add_title(image_path, text):
 
     else:
         draw.text((0, 0), 'filtered by: ' + text, font=font, fill='yellow')
-    image_name = os.path.split(image_path)[1]
-    name_extension = '{}_'.format(text)
-    new_name = name_extension + image_name
-    return original  # , new_name
-    # original.save(new_name,'JPEG', quality=90)
+    return original
+
 
 
 def create_collage(width, height, listofimages, collage_nbr, save_path):
@@ -51,8 +47,6 @@ def create_collage(width, height, listofimages, collage_nbr, save_path):
     new_im = Image.new('RGB', (width, height))
     ims = []
     for im in listofimages:
-        # print(p)
-        # im = Image.open(p)
         im.thumbnail(size)
         ims.append(im)
     i = 0
