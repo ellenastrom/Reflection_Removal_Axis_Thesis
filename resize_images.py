@@ -1,6 +1,8 @@
 from PIL import Image
 import os, sys
 
+# script to resize images in input path and save in output path
+
 inputpath = "generated_1/transmission/"
 outputpath = inputpath + 'resized/'
 
