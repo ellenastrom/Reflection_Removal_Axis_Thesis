@@ -80,12 +80,10 @@ class Collage:
         sub_dir_list = []
         # loop through all folders in input folder
         for sub_dir in sorted(os.listdir(path)):
-<<<<<<< HEAD
             if any(x in sub_dir.lower() for x in ['dad', 'err', 'ibcln', 'rag', 'real']):
-=======
+            
             # if folder name contains any network name, add to list of sub dirs
             if 'dad' or 'err' or 'ibcln' or 'rag' in sub_dir.lower():
->>>>>>> Ellen
                 sub_dir_list.append(sub_dir)
         collage_nbr = 0  # counting collages
         # loop through images in all 5 folders at the same time
@@ -101,10 +99,8 @@ class Collage:
                     im_path_ibcln) and is_image_file(im_path_rag) and is_image_file(im_path_rag):
                 can_load = True
                 try:
-<<<<<<< HEAD
-=======
+
                     # if able to load images, add title to each image
->>>>>>> Ellen
                     im_dad_text = add_title(os.path.join(path, sub_dir_list[0], im_path_dad), sub_dir_list[0])
                     im_err_text = add_title(os.path.join(path, sub_dir_list[1], im_path_err), sub_dir_list[1])
                     im_ibcln_text = add_title(os.path.join(path, sub_dir_list[2], im_path_ibcln), sub_dir_list[2])
