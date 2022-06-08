@@ -2,9 +2,11 @@ import os
 import sys
 from PIL import Image
 
+# script to extract image from folder based on image file name (can be used to extract filter results from networks). Inputs are image folder path, path to folder where to save, and search word to determine which file names to save  
 
+
+#check if file is image
 def is_image_file(filename):
-    # check if the image ends with png
     IMG_EXTENSIONS = [
         '.jpg', '.JPG', '.jpeg', '.JPEG',
         '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
@@ -12,7 +14,8 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
 
-def extract_trans_IBCLN(folder_path, save_path, search):
+#extract image based on if it contains word "search"
+def extract_images(folder_path, save_path, search):
     for filename in os.listdir(folder_path):
         if is_image_file(filename):
             if filename.find(search) != -1:
@@ -21,4 +24,4 @@ def extract_trans_IBCLN(folder_path, save_path, search):
 
 
 if __name__ == "__main__":
-    extract_trans_IBCLN(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]))
+    extract_images(str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]))

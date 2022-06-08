@@ -11,6 +11,9 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
+# Script to evaluate and create excel file of results. The evaluation is either on synthetic or real data.
+# For synthetic data, evaluation is based on SSIM and PSNR. For real data, a file with possible grading is created
+
 date = str(datetime.now())
 parser = argparse.ArgumentParser('Evaluation')
 parser.add_argument('--background_dir', default="./background",
@@ -26,20 +29,13 @@ parser.add_argument('--save_dir', default='./metrics_results_DATA_SET_NAME_{}.xl
                     help="path where to save metric results")
 
 
+# check if file is image
 def is_image_file(filename):
-    # check if the image ends with png
     IMG_EXTENSIONS = [
         '.jpg', '.JPG', '.jpeg', '.JPEG',
         '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
     ]
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
-
-
-def get_col_widths(dataframe):
-    # First we find the maximum length of the index column
-    idx_max = max([len(str(s)) for s in dataframe.index.values] + [len(str(dataframe.index.name))])
-    # Then, we concatenate this to the max of the lengths of column name and its values for each column, left to right
-    return [idx_max] + [max([len(str(s)) for s in dataframe[col].values] + [len(col)]) for col in dataframe.columns]
 
 
 class Evaluator:
@@ -72,21 +68,25 @@ class Evaluator:
         self.color_five_worst = PatternFill(patternType='solid',
                                             fgColor='DE8E7E')
 
+    # function to evaluate synthetic data
     def evaluate_synthetic_data(self):
-        # def evaluate(dir_bg, dir_res, dir_test, data_id='DATA SET NAME', dir_save=None):
-
+        # allocate lists of psnr and ssim results, ground truth images, filtered result images and original images (
+        # test set)
         psnr_list = []
         ssim_list = []
         image_list_gt = []
         image_list_result = []
         image_list_test = []
 
+        # loop through all image folders at once and store image path
         for img_bg, img_res, img_test in tqdm(zip(sorted(os.listdir(self.dir_bg), key=str.casefold),
                                                   sorted(os.listdir(self.dir_res), key=str.casefold),
                                                   sorted(os.listdir(self.dir_test), key=str.casefold))):
             ground_truth_image_path = os.path.join(self.dir_bg, img_bg)
             result_image_path = os.path.join(self.dir_res, img_res)
             test_image_path = os.path.join(self.dir_test, img_test)
+
+            # if is image, open image as PIL.Image
             if is_image_file(ground_truth_image_path) and is_image_file(result_image_path) and is_image_file(
                     test_image_path):
                 can_load = True
@@ -99,13 +99,16 @@ class Evaluator:
                     can_load = False
                     continue
                 if can_load:
+                    # if loaded, append image to corresponding list
                     image_list_gt.append(ground_truth_image_path)
                     image_list_result.append(result_image_path)
                     image_list_test.append(test_image_path)
 
+                    # convert to RGB if needed
                     if len(result_img.split()) == 4:
                         result_img = result_img.convert('RGB')
 
+                    # convert to float to calculate psnr and ssim
                     ground_truth_img = img_as_float(ground_truth_img)
                     result_img = img_as_float(result_img)
 
@@ -113,13 +116,13 @@ class Evaluator:
                     psnr_val = psnr(ground_truth_img, result_img)
                     ssim_list.append(ssim_val)
                     psnr_list.append(psnr_val)
-
+        # create pandas data frame of results and convert to excel sheet
         d = {'GT': image_list_gt, 'Filtered': image_list_result, 'SSIM': ssim_list, 'PSNR': psnr_list,
              'Original': image_list_test}
         df = pd.DataFrame(data=d)
         df.to_excel(self.dir_save, index=False, sheet_name='sheet1')
 
-        # mean and std values
+        # mean and std values of psnr and ssim
         ssim_mean = np.mean(ssim_list)
         psnr_mean = np.mean(psnr_list)
         ssim_median = np.median(ssim_list)
@@ -127,21 +130,28 @@ class Evaluator:
         ssim_std = np.std(ssim_list)
         psnr_std = np.std(psnr_list)
 
+        # open sheet as work sheet
         wb = openpyxl.load_workbook(self.dir_save)
         ws = wb['sheet1']  # Name of the working sheet
 
+        # find best ssim and psnr
         max_ssim_idx = np.argmax(ssim_list) + 2
         max_psnr_idx = np.argmax(psnr_list) + 2
 
+        # find worst ssim and psnr
         min_ssim_idx = np.argmin(ssim_list) + 2
         min_psnr_idx = np.argmin(psnr_list) + 2
 
+        # find the second to sixth best ssim and psnr
         five_max_ssim_idx = np.argsort(ssim_list)[-self.nbr_marked - 1:-1]
         five_max_psnr_idx = np.argsort(psnr_list)[-self.nbr_marked - 1:-1]
 
+        # find the second to sixth worst ssim and psnr
         five_min_ssim_idx = np.argsort(ssim_list)[1:self.nbr_marked + 1]
         five_min_psnr_idx = np.argsort(psnr_list)[1:self.nbr_marked + 1]
 
+        # mark the found indices with different colors. Green is best results (dark green the best),
+        # red is worst (dark red most worst)
         for i in range(0, self.nbr_marked):
             ws[int(five_max_ssim_idx[i] + 2)][2].fill = self.color_five_best
             ws[int(five_max_psnr_idx[i] + 2)][3].fill = self.color_five_best
@@ -155,6 +165,7 @@ class Evaluator:
         ws[int(min_ssim_idx)][2].fill = self.color_worst
         ws[int(min_psnr_idx)][3].fill = self.color_worst
 
+        # go from image path to hyperlink to be able to click on and open the image in Excel
         for i in range(2, len(ssim_list) + 2):
             ws[i][0].value = '=HYPERLINK("{}", "im{}")'.format(ws[i][0].value, i - 1)
             ws[i][0].style = 'Hyperlink'
@@ -163,6 +174,7 @@ class Evaluator:
             ws[i][4].value = '=HYPERLINK("{}", "im{}")'.format(ws[i][4].value, i - 1)
             ws[i][4].style = 'Hyperlink'
 
+        # add mean, median, and std in Excel sheet
         ws[int(len(ssim_list) + 3)][1].value = 'mean:'
         ws[int(len(ssim_list) + 4)][1].value = 'median:'
         ws[int(len(ssim_list) + 5)][1].value = 'std:'
@@ -179,6 +191,7 @@ class Evaluator:
         wb.save(self.dir_save)
         print("results saved in: " + self.dir_save)
 
+    # evaluate real data (evaluation is manually done after sheet is created)
     def evaluate_real_data(self):
         grade_list = []
         image_list_collage = []
